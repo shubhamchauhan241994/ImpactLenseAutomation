@@ -7,8 +7,8 @@ services:
     container_name: impactlens-postgres
     environment:
       POSTGRES_DB: impactlens
-      POSTGRES_USER: impactlens
-      POSTGRES_PASSWORD: impactlens123
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
     ports:
       - "5432:5432"
     volumes:
@@ -38,8 +38,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/impactlens
-      SPRING_DATASOURCE_USERNAME: impactlens
-      SPRING_DATASOURCE_PASSWORD: impactlens123
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     depends_on:

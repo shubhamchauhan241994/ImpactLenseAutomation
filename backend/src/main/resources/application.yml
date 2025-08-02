@@ -7,8 +7,8 @@ spring:
   
   datasource:
     url: jdbc:postgresql://localhost:5432/impactlens
-    username: impactlens
-    password: impactlens123
+    username: admin
+    password: admin123
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -151,9 +151,9 @@ spring:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:postgresql://postgres:5432/impactlens
-    username: impactlens
-    password: impactlens123
+    url: jdbc:postgresql://localhost:5432/impactlens
+    username: admin
+    password: admin123
   redis:
     host: redis
     port: 6379

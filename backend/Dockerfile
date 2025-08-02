@@ -26,10 +26,10 @@ WORKDIR /app
 RUN addgroup -S spring && adduser -S spring -G spring
 
 # Copy the built jar from build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/target/*.jar impactlens-backend-1.0.0.jar
 
 # Change ownership to spring user
-RUN chown spring:spring app.jar
+RUN chown spring:spring impactlens-backend-1.0.0.jar
 
 # Switch to spring user
 USER spring
@@ -42,4 +42,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"] 
+ENTRYPOINT ["java", "-jar", "impactlens-backend-1.0.0.jar"] 
