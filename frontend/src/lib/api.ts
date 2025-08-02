@@ -1,30 +1,35 @@
 import axios from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080'
 
-const api = axios.create({
+const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-// Request interceptor for adding auth token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+// Request interceptor for adding auth tokens
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
   }
-  return config
-})
+)
 
-// Response interceptor for error handling
-api.interceptors.response.use(
+// Response interceptor for handling errors
+apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized access
-      localStorage.removeItem('auth_token')
+      localStorage.removeItem('authToken')
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -43,75 +48,73 @@ export interface AnalysisRequest {
 }
 
 export interface AnalysisResponse {
-  analysisId: string
+  id: string
+  ticketId: string
   status: string
   report: {
     summary: string
-    gapsIdentified: Array<{
-      category: string
-      description: string
-      severity: string
-      impact: string
-      suggestions: string[]
-    }>
     relatedTickets: Array<{
       ticketKey: string
       summary: string
-      status: string
-      priority: string
-      relevanceScore: number
-      relationshipType: string
-      impactDescription: string
-    }>
-    regressionAreas: Array<{
-      area: string
       description: string
-      riskLevel: string
-      testCases: string[]
-      rationale: string
+      severity: string
+      relevanceScore: number
+      url: string
     }>
-    recommendations: string[]
+    riskAssessment: {
+      risks: Array<{
+        level: string
+        title: string
+        description: string
+        mitigation?: string
+      }>
+    }
+    recommendations: Array<{
+      title: string
+      description: string
+    }>
+    metrics: {
+      impactScore: number
+      affectedTeams: number
+      timelineImpact: string
+    }
   }
   metadata: {
     processingTime: number
     ticketsAnalyzed: number
-    cacheHit: boolean
-    completedAt: string
-    modelUsed: string
+    createdAt: string
   }
 }
 
-export const analyzeTicket = async (ticketId: string, options: any): Promise<AnalysisResponse> => {
-  const response = await api.post('/api/analysis/analyze', {
-    ticketId,
-    options,
-  })
-  return response.data
-}
+export const api = {
+  // Analyze a Jira ticket
+  analyzeTicket: async (request: AnalysisRequest): Promise<AnalysisResponse> => {
+    const response = await apiClient.post('/api/analysis/analyze', request)
+    return response.data
+  },
 
-export const getAnalysisStatus = async (analysisId: string): Promise<AnalysisResponse> => {
-  const response = await api.get(`/api/analysis/status/${analysisId}`)
-  return response.data
-}
+  // Get analysis status
+  getAnalysisStatus: async (analysisId: string): Promise<AnalysisResponse> => {
+    const response = await apiClient.get(`/api/analysis/status/${analysisId}`)
+    return response.data
+  },
 
-export const getAnalysisHistory = async (page = 0, size = 20): Promise<AnalysisResponse[]> => {
-  const response = await api.get('/api/analysis/history', {
-    params: { page, size },
-  })
-  return response.data
-}
+  // Get analysis history
+  getAnalysisHistory: async (page: number = 0, size: number = 20): Promise<AnalysisResponse[]> => {
+    const response = await apiClient.get('/api/analysis/history', {
+      params: { page, size }
+    })
+    return response.data
+  },
 
-export const deleteAnalysis = async (analysisId: string): Promise<void> => {
-  await api.delete(`/api/analysis/${analysisId}`)
-}
+  // Delete analysis
+  deleteAnalysis: async (analysisId: string): Promise<void> => {
+    await apiClient.delete(`/api/analysis/${analysisId}`)
+  },
 
-export const getCacheStatus = async () => {
-  const response = await api.get('/api/cache/status')
-  return response.data
-}
-
-export const clearCache = async () => {
-  await api.delete('/api/cache/clear')
-}
-
-export default api 
+  // Health check
+  healthCheck: async (): Promise<string> => {
+    const response = await apiClient.get('/api/analysis/health')
+    return response.data
+  },
+} 
