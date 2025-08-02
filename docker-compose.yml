@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: impactlens-postgres
+    environment:
+      POSTGRES_DB: impactlens
+      POSTGRES_USER: impactlens
+      POSTGRES_PASSWORD: impactlens123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - impactlens-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: impactlens-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - impactlens-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: impactlens-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/impactlens
+      SPRING_DATASOURCE_USERNAME: impactlens
+      SPRING_DATASOURCE_PASSWORD: impactlens123
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - impactlens-network
+    volumes:
+      - ./backend:/app
+      - /app/target
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: impactlens-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_APP_NAME: ImpactLens
+    depends_on:
+      - backend
+    networks:
+      - impactlens-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  impactlens-network:
+    driver: bridge 

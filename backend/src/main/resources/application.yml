@@ -1,0 +1,177 @@
+spring:
+  application:
+    name: impactlens-backend
+  
+  profiles:
+    active: dev
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/impactlens
+    username: impactlens
+    password: impactlens123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+  
+  cache:
+    type: redis
+    redis:
+      time-to-live: 86400000 # 24 hours
+      cache-null-values: false
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+  
+  security:
+    user:
+      name: admin
+      password: admin123
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,caches
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.impactlens: DEBUG
+    org.springframework.cache: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Jira Configuration
+jira:
+  base-url: http://talentica-team-odqenqtw.atlassian.net
+  username: piyush.khandelwal@talentica.com
+  api-token: ATATT3xFfGF0PTeKswoqPIGoQZPlNg336NzNVLhetijzen0VV5A0986KWvrmWDocK-YOFIxx5B5fGocNI7VHsC6--KAdrsmjFGX5UjkVLcW4Ss1iywdMGWEzieZgLdfWuV0rzmvMxaMFRfud82WrjunTfvSnzXWX5IlE33MpF4AV-wFr9iAqIzg=65AF248E
+  connection-timeout: 30000
+  read-timeout: 30000
+
+# OpenAI Configuration
+openai:
+  api-key: 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
+  model: gpt-4
+  max-tokens: 2000
+  temperature: 0.3
+  timeout: 60000
+
+# JWT Configuration
+jwt:
+  secret: your-super-secret-jwt-key-that-should-be-at-least-256-bits-long
+  expiration: 900000 # 15 minutes
+  refresh-expiration: 604800000 # 7 days
+
+# Analysis Configuration
+analysis:
+  cache-ttl: 3600000 # 1 hour
+  max-related-tickets: 20
+  min-relevance-score: 0.3
+  batch-size: 10
+
+# Rate Limiting
+rate-limit:
+  requests-per-minute: 100
+  burst-capacity: 200
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    clean-disabled: false
+
+logging:
+  level:
+    com.impactlens: DEBUG
+    org.springframework.web: DEBUG
+
+---
+# Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://postgres:5432/impactlens
+    username: impactlens
+    password: impactlens123
+  redis:
+    host: redis
+    port: 6379
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    clean-disabled: true
+
+logging:
+  level:
+    com.impactlens: INFO
+    org.springframework.web: WARN 
